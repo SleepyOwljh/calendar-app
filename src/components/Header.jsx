@@ -1,6 +1,7 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, LogOut } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import { auth } from '../firebase';
 
 const Header = ({ currentDate, setCurrentDate, currentView, setCurrentView, onNavigate }) => {
     const views = ['day', 'week', 'month', 'quarter', 'year'];
@@ -40,7 +41,7 @@ const Header = ({ currentDate, setCurrentDate, currentView, setCurrentView, onNa
                 </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
                 <select
                     value={currentView}
                     onChange={(e) => setCurrentView(e.target.value)}
@@ -52,6 +53,13 @@ const Header = ({ currentDate, setCurrentDate, currentView, setCurrentView, onNa
                         </option>
                     ))}
                 </select>
+                <button
+                    onClick={() => auth.signOut()}
+                    className="p-2 text-gray-600 rounded-full hover:bg-gray-100 hover:text-red-600"
+                    title="Sign Out"
+                >
+                    <LogOut className="w-5 h-5" />
+                </button>
             </div>
         </header>
     );
