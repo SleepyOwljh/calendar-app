@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { db } from '../firebase';
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 
 const EventContext = createContext();
 
@@ -12,27 +13,47 @@ export const useEvents = () => {
 };
 
 export const EventProvider = ({ children }) => {
-    const [events, setEvents] = useState(() => {
-        const savedEvents = localStorage.getItem('calendar-events');
-        return savedEvents ? JSON.parse(savedEvents) : [];
-    });
+    const [events, setEvents] = useState([]);
 
     useEffect(() => {
-        localStorage.setItem('calendar-events', JSON.stringify(events));
-    }, [events]);
+        // Subscribe to real-time updates
+        const unsubscribe = onSnapshot(collection(db, 'events'), (snapshot) => {
+            const eventsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                // Convert Firestore Timestamps to Dates if necessary, 
+                // but our app stores dates as ISO strings or Date objects.
+                // Let's ensure we handle them correctly.
+                start: doc.data().start.toDate ? doc.data().start.toDate() : new Date(doc.data().start),
+                end: doc.data().end.toDate ? doc.data().end.toDate() : new Date(doc.data().end)
+            }));
+            setEvents(eventsData);
+        });
 
-    const addEvent = (event) => {
-        setEvents((prev) => [...prev, { ...event, id: uuidv4() }]);
+        return () => unsubscribe();
+    }, []);
+
+    const addEvent = async (event) => {
+        // Firestore generates the ID automatically
+        await addDoc(collection(db, 'events'), {
+            ...event,
+            start: event.start.toISOString(),
+            end: event.end.toISOString()
+        });
     };
 
-    const updateEvent = (updatedEvent) => {
-        setEvents((prev) =>
-            prev.map((evt) => (evt.id === updatedEvent.id ? updatedEvent : evt))
-        );
+    const updateEvent = async (updatedEvent) => {
+        const eventRef = doc(db, 'events', updatedEvent.id);
+        const { id, ...data } = updatedEvent;
+        await updateDoc(eventRef, {
+            ...data,
+            start: data.start.toISOString(),
+            end: data.end.toISOString()
+        });
     };
 
-    const deleteEvent = (id) => {
-        setEvents((prev) => prev.filter((evt) => evt.id !== id));
+    const deleteEvent = async (id) => {
+        await deleteDoc(doc(db, 'events', id));
     };
 
     return (
