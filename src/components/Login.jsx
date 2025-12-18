@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { auth } from '../firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Lock, Mail } from 'lucide-react';
 
 const Login = () => {
-    const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -14,13 +13,9 @@ const Login = () => {
         setError('');
 
         try {
-            if (isSignUp) {
-                await createUserWithEmailAndPassword(auth, email, password);
-            } else {
-                await signInWithEmailAndPassword(auth, email, password);
-            }
+            await signInWithEmailAndPassword(auth, email, password);
         } catch (err) {
-            setError(err.message.replace('Firebase: ', ''));
+            setError('Invalid email or password');
         }
     };
 
@@ -29,10 +24,10 @@ const Login = () => {
             <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
                 <div className="text-center">
                     <h2 className="text-3xl font-extrabold text-gray-900">
-                        {isSignUp ? 'Create Account' : 'Sign In'}
+                        Sign In
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        {isSignUp ? 'Sign up to access the calendar' : 'Sign in to access your calendar'}
+                        Sign in to access your calendar
                     </p>
                 </div>
 
@@ -77,20 +72,10 @@ const Login = () => {
                             type="submit"
                             className="relative flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md group hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
-                            {isSignUp ? 'Sign Up' : 'Sign In'}
+                            Sign In
                         </button>
                     </div>
                 </form>
-
-                <div className="text-center">
-                    <button
-                        type="button"
-                        className="text-sm text-blue-600 hover:text-blue-500"
-                        onClick={() => setIsSignUp(!isSignUp)}
-                    >
-                        {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-                    </button>
-                </div>
             </div>
         </div>
     );
